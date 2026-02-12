@@ -1,0 +1,132 @@
+name: Deploy LLM-FW
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'cf-worker/**'
+      - 'cf-dashboard/**'
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Worker Dependencies
+        working-directory: ./cf-worker
+        run: npm ci
+        
+      - name: Type Check Worker
+        working-directory: ./cf-worker
+        run: npm run typecheck
+        
+      - name: Install Dashboard Dependencies
+        working-directory: ./cf-dashboard
+        run: npm ci
+        
+      - name: Build Dashboard
+        working-directory: ./cf-dashboard
+        run: npm run build
+
+  deploy-worker-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Deploy Worker to Staging
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Dependencies
+        working-directory: ./cf-worker
+        run: npm ci
+        
+      - name: Deploy to Cloudflare (Staging)
+        working-directory: ./cf-worker
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -sf https://llm-fw-edge-staging.your-account.workers.dev/health || exit 1
+
+  deploy-worker-production:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Deploy Worker to Production
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Dependencies
+        working-directory: ./cf-worker
+        run: npm ci
+        
+      - name: Deploy to Cloudflare (Production)
+        working-directory: ./cf-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -sf https://llm-fw-edge.your-account.workers.dev/health || exit 1
+          
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''
+
+  deploy-dashboard:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Deploy Dashboard
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Dependencies
+        working-directory: ./cf-dashboard
+        run: npm ci
+        
+      - name: Build Dashboard
+        working-directory: ./cf-dashboard
+        run: npm run build
+        
+      - name: Deploy to Cloudflare Pages
+        working-directory: ./cf-dashboard
+        run: npx wrangler pages deploy dist --project-name=llm-fw-dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

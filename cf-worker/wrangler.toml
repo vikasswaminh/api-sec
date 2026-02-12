@@ -1,0 +1,112 @@
+# Cloudflare Workers Configuration for LLM-FW
+# Usage: wrangler deploy
+
+name = "llm-fw-edge"
+main = "src/index.ts"
+compatibility_date = "2024-02-08"
+compatibility_flags = ["nodejs_compat"]
+
+# Account info - fill these in
+# account_id = "YOUR_ACCOUNT_ID"
+# route = "api.yourdomain.com/*"
+
+[build]
+command = "npm run build"
+
+# ==================== D1 DATABASE ====================
+[[d1_databases]]
+binding = "DB"
+database_name = "llm-fw-db"
+database_id = "ac4be2a0-c653-4db7-bb96-a3fcecd1b9f3"
+
+# ==================== KV NAMESPACES ====================
+[[kv_namespaces]]
+binding = "CACHE"
+id = "2b8c0f2d91614cb1829f0739fdb457c2"
+
+[[kv_namespaces]]
+binding = "SIGNATURES"
+id = "bc51ad1c2c8d4fd6baf2ac50545681bf"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "d732b6a5e10a46958732325a08fa9198"
+
+# ==================== R2 BUCKETS ====================
+[[r2_buckets]]
+binding = "LOGS"
+bucket_name = "llm-fw-logs"
+
+[[r2_buckets]]
+binding = "MODELS"
+bucket_name = "llm-fw-models"
+
+# ==================== QUEUES (DISABLED - CREATE MANUALLY) ====================
+# [[queues.producers]]
+# binding = "LOG_QUEUE"
+# queue = "llm-fw-log-queue"
+# 
+# [[queues.producers]]
+# binding = "ANALYTICS_QUEUE"
+# queue = "llm-fw-analytics-queue"
+# 
+# [[queues.consumers]]
+# queue = "llm-fw-log-queue"
+# max_batch_size = 100
+# max_batch_timeout = 30
+# max_retries = 3
+# dead_letter_queue = "llm-fw-dlq"
+# 
+# [[queues.consumers]]
+# queue = "llm-fw-analytics-queue"
+# max_batch_size = 500
+# max_batch_timeout = 60
+
+# ==================== ANALYTICS ENGINE (DISABLED - ENABLE IN DASHBOARD) ====================
+# [[analytics_engine_datasets]]
+# binding = "ANALYTICS"
+# dataset = "llm-fw-metrics"
+
+# ==================== DURABLE OBJECTS (DISABLED - REQUIRES PAID PLAN) ====================
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+# 
+# [[durable_objects.bindings]]
+# name = "SESSION_STORE"
+# class_name = "SessionStore"
+# 
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["RateLimiter", "SessionStore"]
+
+# ==================== ENVIRONMENT VARIABLES ====================
+[vars]
+ENVIRONMENT = "production"
+JWT_SECRET = "1574330b636be4a081d03b0b1213a9ceda329ca5cdbd435c6c8172926fb6701f"
+ML_BACKEND_URL = "http://your-droplet-ip:3000"
+MAX_PAYLOAD_SIZE = "1048576"  # 1MB
+DEFAULT_RATE_LIMIT = "100"
+RATE_LIMIT_WINDOW = "60"
+
+# ==================== DEVELOPMENT ENVIRONMENT ====================
+[env.dev]
+name = "llm-fw-edge-dev"
+vars = { ENVIRONMENT = "development", DEFAULT_RATE_LIMIT = "1000" }
+
+[[env.dev.d1_databases]]
+binding = "DB"
+database_name = "llm-fw-db-dev"
+database_id = "YOUR_DEV_D1_ID"
+
+# ==================== STAGING ENVIRONMENT ====================
+[env.staging]
+name = "llm-fw-edge-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# ==================== BUILD CONFIG ====================
+minify = true
+
+[observability]
+enabled = true
+head_sampling_rate = 0.1  # 10% sampling for logs

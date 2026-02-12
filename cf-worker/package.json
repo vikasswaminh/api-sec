@@ -1,0 +1,36 @@
+{
+  "name": "llm-fw-edge",
+  "version": "1.0.0",
+  "description": "Cloudflare Edge Layer for LLM-FW",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "esbuild src/index.ts --bundle --format=esm --platform=neutral --target=es2022 --outfile=dist/index.js --minify",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env dev",
+    "db:create": "wrangler d1 create llm-fw-db",
+    "db:migrate": "wrangler d1 migrations apply llm-fw-db",
+    "db:migrate:dev": "wrangler d1 migrations apply llm-fw-db --env dev",
+    "kv:create": "npm run kv:create:cache && npm run kv:create:signatures && npm run kv:create:rate-limit",
+    "kv:create:cache": "wrangler kv:namespace create CACHE",
+    "kv:create:signatures": "wrangler kv:namespace create SIGNATURES",
+    "kv:create:rate-limit": "wrangler kv:namespace create RATE_LIMIT",
+    "r2:create": "wrangler r2 bucket create llm-fw-logs && wrangler r2 bucket create llm-fw-models",
+    "queue:create": "wrangler queues create llm-fw-log-queue && wrangler queues create llm-fw-analytics-queue",
+    "setup": "npm run db:create && npm run kv:create && npm run r2:create && npm run queue:create",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "hono": "^4.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240208.0",
+    "@types/node": "^20.11.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.28.0"
+  }
+}

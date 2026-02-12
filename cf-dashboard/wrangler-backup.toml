@@ -1,0 +1,21 @@
+# Cloudflare Pages Configuration for LLM-FW Dashboard
+name = "llm-fw-dashboard"
+compatibility_date = "2024-02-08"
+pages_build_output_dir = "dist"
+
+# Build command
+[build]
+command = "npm run build"
+
+# Environment variables for the dashboard
+[vars]
+API_BASE_URL = "https://llm-fw-edge.vikas4988.workers.dev"
+ENVIRONMENT = "production"
+
+# Development environment
+[env.dev]
+vars = { API_BASE_URL = "http://localhost:8787", ENVIRONMENT = "development" }
+
+# Staging environment
+[env.staging]
+vars = { API_BASE_URL = "https://llm-fw-edge-staging.your-subdomain.workers.dev", ENVIRONMENT = "staging" }

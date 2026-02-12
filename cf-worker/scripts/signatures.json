@@ -1,0 +1,142 @@
+[
+  {
+    "key": "sig:injection:001",
+    "value": "{\"pattern\":\"ignore previous instructions\",\"type\":\"prompt_injection\",\"severity\":\"critical\",\"confidence\":0.95}"
+  },
+  {
+    "key": "sig:injection:002",
+    "value": "{\"pattern\":\"ignore all previous instructions\",\"type\":\"prompt_injection\",\"severity\":\"critical\",\"confidence\":0.95}"
+  },
+  {
+    "key": "sig:injection:003",
+    "value": "{\"pattern\":\"ignore the previous\",\"type\":\"prompt_injection\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:injection:004",
+    "value": "{\"pattern\":\"new instructions:\",\"type\":\"prompt_injection\",\"severity\":\"high\",\"confidence\":0.8}"
+  },
+  {
+    "key": "sig:injection:005",
+    "value": "{\"pattern\":\"system prompt:\",\"type\":\"prompt_injection\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:injection:006",
+    "value": "{\"pattern\":\"you are now\",\"type\":\"prompt_injection\",\"severity\":\"medium\",\"confidence\":0.7}"
+  },
+  {
+    "key": "sig:injection:007",
+    "value": "{\"pattern\":\"roleplay as\",\"type\":\"prompt_injection\",\"severity\":\"medium\",\"confidence\":0.65}"
+  },
+  {
+    "key": "sig:injection:008",
+    "value": "{\"pattern\":\"pretend to be\",\"type\":\"prompt_injection\",\"severity\":\"medium\",\"confidence\":0.65}"
+  },
+  {
+    "key": "sig:jailbreak:001",
+    "value": "{\"pattern\":\"DAN mode\",\"type\":\"jailbreak\",\"severity\":\"critical\",\"confidence\":0.95}"
+  },
+  {
+    "key": "sig:jailbreak:002",
+    "value": "{\"pattern\":\"do anything now\",\"type\":\"jailbreak\",\"severity\":\"high\",\"confidence\":0.9}"
+  },
+  {
+    "key": "sig:jailbreak:003",
+    "value": "{\"pattern\":\"developer mode\",\"type\":\"jailbreak\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:jailbreak:004",
+    "value": "{\"pattern\":\"STAN\",\"type\":\"jailbreak\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:jailbreak:005",
+    "value": "{\"pattern\":\"jailbreak\",\"type\":\"jailbreak\",\"severity\":\"medium\",\"confidence\":0.75}"
+  },
+  {
+    "key": "sig:jailbreak:006",
+    "value": "{\"pattern\":\"no restrictions\",\"type\":\"jailbreak\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:jailbreak:007",
+    "value": "{\"pattern\":\"no limits\",\"type\":\"jailbreak\",\"severity\":\"medium\",\"confidence\":0.7}"
+  },
+  {
+    "key": "sig:jailbreak:008",
+    "value": "{\"pattern\":\"bypass safety\",\"type\":\"jailbreak\",\"severity\":\"critical\",\"confidence\":0.95}"
+  },
+  {
+    "key": "sig:jailbreak:009",
+    "value": "{\"pattern\":\"ignore safety\",\"type\":\"jailbreak\",\"severity\":\"critical\",\"confidence\":0.95}"
+  },
+  {
+    "key": "sig:jailbreak:010",
+    "value": "{\"pattern\":\"ignore ethics\",\"type\":\"jailbreak\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:exfil:001",
+    "value": "{\"pattern\":\"system prompt\",\"type\":\"data_exfiltration\",\"severity\":\"high\",\"confidence\":0.9}"
+  },
+  {
+    "key": "sig:exfil:002",
+    "value": "{\"pattern\":\"training data\",\"type\":\"data_exfiltration\",\"severity\":\"high\",\"confidence\":0.85}"
+  },
+  {
+    "key": "sig:exfil:003",
+    "value": "{\"pattern\":\"internal knowledge\",\"type\":\"data_exfiltration\",\"severity\":\"medium\",\"confidence\":0.75}"
+  },
+  {
+    "key": "sig:exfil:004",
+    "value": "{\"pattern\":\"repeat after me\",\"type\":\"data_exfiltration\",\"severity\":\"medium\",\"confidence\":0.7}"
+  },
+  {
+    "key": "sig:exfil:005",
+    "value": "{\"pattern\":\"output your\",\"type\":\"data_exfiltration\",\"severity\":\"medium\",\"confidence\":0.7}"
+  },
+  {
+    "key": "sig:exfil:006",
+    "value": "{\"pattern\":\"show me your\",\"type\":\"data_exfiltration\",\"severity\":\"low\",\"confidence\":0.6}"
+  },
+  {
+    "key": "sig:adversarial:001",
+    "value": "{\"pattern\":\"base64\",\"type\":\"adversarial\",\"severity\":\"low\",\"confidence\":0.5}"
+  },
+  {
+    "key": "sig:adversarial:002",
+    "value": "{\"pattern\":\"base 64\",\"type\":\"adversarial\",\"severity\":\"low\",\"confidence\":0.5}"
+  },
+  {
+    "key": "sig:adversarial:003",
+    "value": "{\"pattern\":\"rot13\",\"type\":\"adversarial\",\"severity\":\"medium\",\"confidence\":0.65}"
+  },
+  {
+    "key": "sig:adversarial:004",
+    "value": "{\"pattern\":\"hex encode\",\"type\":\"adversarial\",\"severity\":\"low\",\"confidence\":0.5}"
+  },
+  {
+    "key": "sig:adversarial:005",
+    "value": "{\"pattern\":\"unicode\",\"type\":\"adversarial\",\"severity\":\"low\",\"confidence\":0.45}"
+  },
+  {
+    "key": "sig:adversarial:006",
+    "value": "{\"pattern\":\"homoglyph\",\"type\":\"adversarial\",\"severity\":\"medium\",\"confidence\":0.6}"
+  },
+  {
+    "key": "sig:adversarial:007",
+    "value": "{\"pattern\":\"invisible character\",\"type\":\"adversarial\",\"severity\":\"medium\",\"confidence\":0.6}"
+  },
+  {
+    "key": "sig:adversarial:008",
+    "value": "{\"pattern\":\"zero width\",\"type\":\"adversarial\",\"severity\":\"medium\",\"confidence\":0.65}"
+  },
+  {
+    "key": "block:ip:192.0.2.100",
+    "value": "1"
+  },
+  {
+    "key": "block:ip:203.0.113.50",
+    "value": "1"
+  },
+  {
+    "key": "block:ip:198.51.100.25",
+    "value": "1"
+  }
+]
