@@ -63,10 +63,34 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Global middleware
 app.use('/*', cors({
-  origin: ['https://dashboard.yourdomain.com', 'http://localhost:3000'],
+  origin: (origin) => {
+    // Allow all Pages.dev deployments and local dev
+    if (origin?.endsWith('.llm-fw-dashboard.pages.dev') || 
+        origin === 'https://llm-fw-dashboard.pages.dev' ||
+        origin?.startsWith('http://localhost')) {
+      return origin;
+    }
+    return '';
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  credentials: true,
 }));
+
+// Simple test inspect endpoint (no auth, no processing)
+app.post('/v1/inspect-simple', async (c) => {
+  try {
+    const body = await c.req.json();
+    return c.json({
+      received: true,
+      prompt: body.prompt || null,
+      messages: body.messages || null,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    return c.json({ error: 'Failed to parse body', details: String(e) }, 400);
+  }
+});
 
 // Health check
 app.get('/health', (c) => {
@@ -214,19 +238,37 @@ app.post('/v1/inspect', authMiddleware, async (c) => {
       payload_preview: 'IP in blocklist',
       reason: 'IP globally blocked',
     };
-    c.executionCtx.waitUntil(c.env.LOG_QUEUE.send(event));
+    if (c.env.LOG_QUEUE) {
+      c.executionCtx.waitUntil(c.env.LOG_QUEUE.send(event));
+    }
     return c.json({ blocked: true, reason: 'IP blocked', confidence: 1.0 }, 403);
   }
   
   // Concatenate all user messages for analysis
-  const messages = body.messages || [];
-  const userContent = messages
-    .filter((m: any) => m.role === 'user')
-    .map((m: any) => m.content)
-    .join('\n');
+  // Support both OpenAI format (messages) and simple format (prompt)
+  let userContent = '';
+  if (body.prompt) {
+    userContent = body.prompt;
+  } else if (body.messages && Array.isArray(body.messages)) {
+    userContent = body.messages
+      .filter((m: any) => m.role === 'user')
+      .map((m: any) => m.content)
+      .join('\n');
+  }
   
   // Edge pattern matching (90% of traffic handled here)
   const edgeResult = edgePatternMatch(userContent);
+  
+  // If no content to analyze, return safe
+  if (!userContent || userContent.trim().length === 0) {
+    return c.json({
+      safe: true,
+      confidence: 1.0,
+      detections: [],
+      scan_time_ms: Date.now() - start,
+    });
+  }
+  
   if (edgeResult.blocked) {
     const event: LogEvent = {
       id: crypto.randomUUID(),
@@ -243,8 +285,11 @@ app.post('/v1/inspect', authMiddleware, async (c) => {
       payload_preview: userContent.substring(0, 200),
       reason: edgeResult.reason,
     };
-    c.executionCtx.waitUntil(c.env.LOG_QUEUE.send(event));
-    c.executionCtx.waitUntil(writeAnalytics(c.env.ANALYTICS, {
+    if (c.env.LOG_QUEUE) {
+      c.executionCtx.waitUntil(c.env.LOG_QUEUE.send(event));
+    }
+    if (c.env.ANALYTICS) {
+      c.executionCtx.waitUntil(writeAnalytics(c.env.ANALYTICS, {
       timestamp: Date.now(),
       user_id: user.id,
       event_type: edgeResult.type!,
@@ -253,18 +298,53 @@ app.post('/v1/inspect', authMiddleware, async (c) => {
       confidence: edgeResult.confidence,
       blocked: true,
     }));
+    }
     
     return c.json({
-      blocked: true,
-      reason: edgeResult.reason,
+      safe: false,
       confidence: edgeResult.confidence,
+      detections: [{
+        type: edgeResult.type,
+        severity: 'high',
+        message: edgeResult.reason || 'Threat detected',
+      }],
       scan_time_ms: Date.now() - start,
       engine: 'edge_pattern',
     }, 200);
   }
   
-  // Complex ML inference (only 10% of traffic reaches here)
-  try {
+  // Content is safe - no threats detected by edge patterns
+  // For now, return safe response (ML backend is optional)
+  const safeEvent: LogEvent = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    type: 'safe',
+    severity: 'low',
+    source_ip: clientIP,
+    user_id: user.id,
+    endpoint_id: '',
+    action: 'allowed',
+    confidence: 0.99,
+    latency_ms: Date.now() - start,
+    payload_hash: await hashString(userContent),
+    payload_preview: userContent.substring(0, 200),
+    reason: 'No threats detected',
+  };
+  // Only send to queue if LOG_QUEUE is available
+  if (c.env.LOG_QUEUE) {
+    c.executionCtx.waitUntil(c.env.LOG_QUEUE.send(safeEvent));
+  }
+  
+  return c.json({
+    safe: true,
+    confidence: 0.99,
+    detections: [],
+    scan_time_ms: Date.now() - start,
+    engine: 'edge_pattern',
+  });
+  
+  // Complex ML inference (only 10% of traffic reaches here) - disabled for now
+  /* try {
     const mlResponse = await fetch(`${c.env.ML_BACKEND_URL}/inspect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -351,7 +431,7 @@ app.post('/v1/inspect', authMiddleware, async (c) => {
       confidence: 0,
       scan_time_ms: Date.now() - start,
     }, 200);
-  }
+  } */
 });
 
 // ============== BATCH INSPECTION ==============
