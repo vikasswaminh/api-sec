@@ -408,6 +408,32 @@ app.get('/v1/stats', authMiddleware, async (c) => {
   });
 });
 
+// Get recent events
+app.get('/v1/events', authMiddleware, async (c) => {
+  const user = c.get('user') as User;
+  const limit = parseInt(c.req.query('limit') || '10');
+  
+  const events = await c.env.DB.prepare(`
+    SELECT 
+      id,
+      timestamp,
+      type,
+      severity,
+      action,
+      confidence,
+      payload_preview as preview
+    FROM events 
+    WHERE user_id = ? 
+    ORDER BY timestamp DESC
+    LIMIT ?
+  `).bind(user.id, limit).all();
+  
+  return c.json({
+    user_id: user.id,
+    events: events.results || [],
+  });
+});
+
 // ============== UTILITY FUNCTIONS ==============
 async function hashString(str: string): Promise<string> {
   const encoder = new TextEncoder();
