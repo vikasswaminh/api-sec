@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, Download, Search, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Shield, AlertTriangle, CheckCircle, Filter } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import { EventsTable } from '../components/EventsTable';
 import { Header } from '../components/Header';
@@ -9,114 +9,76 @@ export default function Events() {
   const [filter, setFilter] = useState<'all' | 'blocked' | 'flagged' | 'allowed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredEvents = events.filter(event => {
-    if (filter !== 'all' && event.action !== filter) return false;
-    if (searchTerm && !event.type.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !event.source_ip.includes(searchTerm)) return false;
+  const filtered = events.filter(e => {
+    if (filter !== 'all' && e.action !== filter) return false;
+    if (searchTerm && !e.type.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !e.source_ip.includes(searchTerm)) return false;
     return true;
   });
 
-  const stats = {
+  const counts = {
     total: events.length,
     blocked: events.filter(e => e.action === 'blocked').length,
     flagged: events.filter(e => e.action === 'flagged').length,
     allowed: events.filter(e => e.action === 'allowed').length,
   };
 
+  const filters = [
+    { key: 'all' as const, label: 'All', count: counts.total, icon: Filter, color: 'violet' },
+    { key: 'blocked' as const, label: 'Blocked', count: counts.blocked, icon: Shield, color: 'red' },
+    { key: 'flagged' as const, label: 'Flagged', count: counts.flagged, icon: AlertTriangle, color: 'amber' },
+    { key: 'allowed' as const, label: 'Allowed', count: counts.allowed, icon: CheckCircle, color: 'emerald' },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Header title="Events & Logs" onRefresh={refetch} />
-      
-      <main className="p-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <button 
-            onClick={() => setFilter('all')}
-            className={`p-4 rounded-xl border text-left transition-all ${
-              filter === 'all' 
-                ? 'bg-blue-600/20 border-blue-500/50' 
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-sm">Total Events</span>
-              <Filter className="w-4 h-4 text-slate-500" />
-            </div>
-            <p className="text-2xl font-bold text-white">{stats.total}</p>
-          </button>
+    <div className="min-h-screen">
+      <Header title="Events" subtitle="Security event log" onRefresh={refetch} />
 
-          <button 
-            onClick={() => setFilter('blocked')}
-            className={`p-4 rounded-xl border text-left transition-all ${
-              filter === 'blocked' 
-                ? 'bg-red-600/20 border-red-500/50' 
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-sm">Blocked</span>
-              <Shield className="w-4 h-4 text-red-400" />
-            </div>
-            <p className="text-2xl font-bold text-red-400">{stats.blocked}</p>
-          </button>
-
-          <button 
-            onClick={() => setFilter('flagged')}
-            className={`p-4 rounded-xl border text-left transition-all ${
-              filter === 'flagged' 
-                ? 'bg-yellow-600/20 border-yellow-500/50' 
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-sm">Flagged</span>
-              <AlertTriangle className="w-4 h-4 text-yellow-400" />
-            </div>
-            <p className="text-2xl font-bold text-yellow-400">{stats.flagged}</p>
-          </button>
-
-          <button 
-            onClick={() => setFilter('allowed')}
-            className={`p-4 rounded-xl border text-left transition-all ${
-              filter === 'allowed' 
-                ? 'bg-green-600/20 border-green-500/50' 
-                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-sm">Allowed</span>
-              <CheckCircle className="w-4 h-4 text-green-400" />
-            </div>
-            <p className="text-2xl font-bold text-green-400">{stats.allowed}</p>
-          </button>
+      <main className="p-8 space-y-6">
+        {/* Filter cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {filters.map(f => {
+            const Icon = f.icon;
+            const active = filter === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  active
+                    ? 'bg-white/[0.04] border-white/[0.08]'
+                    : 'glass-card hover:border-white/[0.08]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-500">{f.label}</span>
+                  <Icon className={`w-3.5 h-3.5 ${active ? `text-${f.color}-400` : 'text-slate-600'}`} />
+                </div>
+                <p className="text-xl font-bold text-white">{f.count}</p>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search by type or IP..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors">
-            <Download className="w-4 h-4" />
-            Export
-          </button>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search by type or IP..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/30 transition-all"
+          />
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
-            Error loading events: {error}
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {error}
           </div>
         )}
 
-        {/* Events Table */}
-        <EventsTable events={filteredEvents} loading={loading} />
+        <EventsTable events={filtered} loading={loading} />
       </main>
     </div>
   );
