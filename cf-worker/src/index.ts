@@ -145,6 +145,25 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500);
 });
 
+// Root route — API info
+app.get('/', (c) => {
+  return c.json({
+    name: 'LLM-FW Edge',
+    version: '1.0.0',
+    description: 'LLM Security Firewall — protects AI endpoints from prompt injection, jailbreak, and data exfiltration attacks.',
+    status: 'operational',
+    endpoints: {
+      health: 'GET /health',
+      inspect: 'POST /v1/inspect',
+      inspect_simple: 'POST /v1/inspect-simple',
+      inspect_batch: 'POST /v1/inspect/batch',
+      stats: 'GET /v1/stats',
+      events: 'GET /v1/events',
+    },
+    docs: 'https://github.com/vikasswaminh/api-sec',
+  });
+});
+
 // Simple test inspect endpoint (no auth, no processing)
 app.post('/v1/inspect-simple', async (c) => {
   try {
