@@ -18,8 +18,10 @@
     "r2:create": "wrangler r2 bucket create llm-fw-logs && wrangler r2 bucket create llm-fw-models",
     "queue:create": "wrangler queues create llm-fw-log-queue && wrangler queues create llm-fw-analytics-queue",
     "setup": "npm run db:create && npm run kv:create && npm run r2:create && npm run queue:create",
-    "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
@@ -29,8 +31,12 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240208.0",
     "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "esbuild": "^0.20.0",
+    "eslint": "^10.0.0",
     "typescript": "^5.3.3",
+    "vitest": "^2.0.0",
     "wrangler": "^3.28.0"
   }
 }

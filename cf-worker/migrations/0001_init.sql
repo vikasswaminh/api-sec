@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS firewall_rules (
     FOREIGN KEY (endpoint_id) REFERENCES endpoints(id) ON DELETE CASCADE
 );
 
--- Events/Logs table (recent only, 90 day TTL)
+-- Events/Logs table (recent only, 90 day TTL enforced by scheduled worker)
 CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -59,8 +59,9 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Aggregated hourly stats (for dashboard)
+-- Composite primary key: one row per user per hour
 CREATE TABLE IF NOT EXISTS hourly_stats (
-    hour TEXT PRIMARY KEY, -- YYYY-MM-DD-HH format
+    hour TEXT NOT NULL,          -- YYYY-MM-DD-HH format
     user_id TEXT NOT NULL,
     requests_total INTEGER DEFAULT 0,
     requests_blocked INTEGER DEFAULT 0,
@@ -70,6 +71,7 @@ CREATE TABLE IF NOT EXISTS hourly_stats (
     threat_jailbreak INTEGER DEFAULT 0,
     threat_exfiltration INTEGER DEFAULT 0,
     threat_adversarial INTEGER DEFAULT 0,
+    PRIMARY KEY (hour, user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -81,8 +83,3 @@ CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
 CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_firewall_rules_user ON firewall_rules(user_id);
 CREATE INDEX IF NOT EXISTS idx_hourly_stats_user ON hourly_stats(user_id, hour);
-
--- Create a default admin user (password: changeme - update in production!)
--- Password hash is for 'admin123' - CHANGE THIS!
-INSERT OR IGNORE INTO users (id, email, password_hash, api_key, tier) VALUES 
-('admin-001', 'admin@super25.ai', '$2a$10$YourHashedPasswordHere', 'sk-admin-test-key-change-in-prod', 'enterprise');
