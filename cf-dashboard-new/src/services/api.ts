@@ -1,10 +1,10 @@
-const API_BASE_URL = 'https://llm-fw-edge.vikas4988.workers.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://llm-fw-edge.vikas4988.workers.dev';
 
 class ApiService {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = localStorage.getItem('api_key') || 'sk-admin-test-key-change-in-prod';
+    this.apiKey = localStorage.getItem('api_key') || '';
   }
 
   setApiKey(key: string) {
@@ -16,32 +16,30 @@ class ApiService {
     return this.apiKey;
   }
 
+  hasApiKey(): boolean {
+    return this.apiKey.length > 0;
+  }
+
   private async fetch(endpoint: string, options: RequestInit = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-API-Key': this.apiKey,
+      ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
       ...options.headers as Record<string, string>,
     };
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-        credentials: 'include',
-      });
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
     }
+
+    return response.json();
   }
 
   // Health check

@@ -160,6 +160,7 @@ export default function Dashboard() {
               View All →
             </button>
           </div>
+          
           <EventsTable events={events.slice(0, 5)} loading={eventsLoading} />
         </div>
       </main>

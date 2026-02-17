@@ -68,7 +68,7 @@ export default function Settings() {
               </label>
               <input
                 type="text"
-                value="https://llm-fw-edge.vikas4988.workers.dev"
+                value={import.meta.env.VITE_API_BASE_URL || 'https://llm-fw-edge.vikas4988.workers.dev'}
                 readOnly
                 className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 cursor-not-allowed"
               />
